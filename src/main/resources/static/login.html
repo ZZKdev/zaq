@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <script src="/vue.js"></script>
+    <link rel="stylesheet" href="/element/index.css">
+    <script src="/element/index.js"></script>
+    <script src="/qs.min.js"></script>
+    <script src="/axios.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-menu mode="horizontal" style="margin-bottom: 20px;">
+        <el-menu-item ><el-link type="info" href="/">首页</el-link></el-menu-item>
+    </el-menu>
+
+    <el-row type="flex" justify="center">
+        <el-col :span="6">
+            <el-form :model="rulesForm" :rules="rules" ref="rulesForm">
+                <el-form-item label="用户名" prop="username">
+                    <el-input placeholder="请输入用户名" v-model="rulesForm.username" prefix-icon="el-icon-user"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input  placeholder="请输入密码" v-model="rulesForm.password" show-password prefix-icon="el-icon-lock"></el-input>
+                </el-form-item>
+                <el-row type="flex" justify="space-between">
+                    <el-col :span="12">
+                        <el-form-item label="记住我">
+                            <el-switch v-model="isRemember"></el-switch>
+                        </el-form-item></el-col>
+                    <el-col :span="7"><el-form-item><el-link type="primary" href="register.html">没有帐号？注册帐号</el-link></el-form-item></el-col>
+                </el-row>
+                <el-form-item>
+                    <el-button type="primary" @click="onSubmit('rulesForm')" style="width: 100%;">登录</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+</div>
+</body>
+<script>
+    let app = new Vue({
+        el: '#app',
+        data: function(){
+            return {
+                rulesForm: {
+                    username: '',
+                    password: '',
+                },
+                isRemember: true,
+                rules: {
+                    username: [
+                        {required: true, message: '请输入用户名', trigger: 'blur'}
+                    ],
+                    password: [
+                        {required: true, message: '密码不能为空', trigger: 'blur'}
+                    ]
+                }
+            }
+        },
+        methods: {
+            onSubmit: function(formName){
+                this.$refs[formName].validate((valid) => {
+                    if(valid) {
+                        this.login();
+                    }
+                })
+            },
+            login: function(){
+                axios.post('api/v1/session', Qs.stringify({
+                    username: this.rulesForm.username,
+                    password: this.rulesForm.password
+                })).then(function (response) {
+                    if(response.data.code === 200){
+                        let cookie = "ticket=" + response.data.ticket + ";path=/" + ";Max-Age=";
+                        if(app.isRemember){
+                            cookie += 3600 * 24 * 10;
+                        }else{
+                            cookie += 3600 * 24;
+                        }
+                        document.cookie = cookie;
+                        window.location.href = "/";
+                    }else{
+                        app.$message.error(response.data.msg)
+                    }
+                }).catch(function (error) {
+                    app.$message.error(error);
+                })
+            }
+        }
+    })
+</script>
+</html>

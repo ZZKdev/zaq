@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/vue.js"></script>
+    <link rel="stylesheet" href="/element/index.css">
+    <script src="/element/index.js"></script>
+    <script src="/axios.min.js"></script>
+    <script src="/qs.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-menu mode="horizontal" style="margin-bottom: 20px;">
+        <el-row type="flex" justify="center">
+            <el-col :span="12" style="display: flex;justify-content: space-between">
+                <el-menu-item><el-link type="info" href="/">首页</el-link></el-menu-item>
+                <div style="display: flex">
+                    <el-menu-item v-if="!isLogin"><el-link type="info" href="/login">登录</el-link></el-menu-item>
+                    <el-menu-item v-if="!isLogin"><el-link type="info" href="/register">注册</el-link></el-menu-item>
+                    <el-menu-item v-if="isLogin"><el-link type="info" icon="el-icon-edit" @click="dialogFormVisible=true">添加问题</el-link></el-menu-item>
+                    <el-menu-item>
+                        <el-input placeholder="输入搜索内容" v-model="search">
+                            <el-button slot="append" icon="el-icon-search"></el-button>
+                        </el-input>
+                    </el-menu-item>
+                </div>
+            </el-col>
+        </el-row>
+    </el-menu>
+    <el-row type="flex" justify="center">
+        <el-col :span="12">
+            <p><i class="el-icon-date"></i> 最新动态</p>
+            <el-divider></el-divider>
+            <el-card v-for="question in questions" v-bind:key="question.id" shadow="hover" style="margin-bottom: 10px;">
+                <div slot="header" style="display: flex; align-items: center; justify-content: space-between">
+                    <p>{{question.title}}</p>
+                    <el-button icon="el-icon-view"><el-link :href="'/questions/' + question.id">问题详情</el-link></el-button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                    <div>
+                        <el-tag hit >2194</el-tag>
+                        <el-button size="small" icon="el-icon-plus">关注问题</el-button>
+                    </div>
+                    <div>
+                        <span>{{question.username}} 于 {{question.createdDate}} 发表 | {{question.commentCount}} 条评论 </span>
+                    </div>
+                </div>
+            </el-card>
+            <el-pagination
+                    background
+                    layout="prev, pager, next"
+                    :total="50" style="display: flex; justify-content: center; flex-basis: 40px">
+            </el-pagination>
+        </el-col>
+    </el-row>
+    <el-dialog center title="添加问题" :visible.sync="dialogFormVisible">
+        <el-form>
+            <el-form-item label="标题">
+                <el-input v-model="title" maxlength="20" show-word-limit prefix-icon="el-icon-edit" style="font-size: 16px;"></el-input>
+            </el-form-item>
+            <el-form-item label="内容">
+                <el-input v-model="content" type="textarea" :autosize="{minRows: 12, maxRows: 16}" placeholder="请输入内容" style="font-size: 16px;"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addQuestion">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+</body>
+<script>
+    let app = new Vue({
+        el: '#app',
+        data: {
+            search: '',
+            isLogin: false,
+            title: '',
+            content: '',
+            dialogFormVisible: false,
+            questions: [],
+        },
+        methods: {
+            addQuestion: function () {
+                axios.post('api/v1/questions',Qs.stringify({
+                    title: this.title,
+                    content: this.content
+                })).then(function (response) {
+                    if(response.data.code === 200){
+                        window.location.href="/questions/" + response.data.questionId;
+                    }else if (response.data.code === 401){
+                        // 未登录或者 ticket 失效，回去重新登录
+                        window.location.href="/login";
+                    }else{
+                        // 其他 code 打印一下
+                        app.$message.error("提交异常")
+                        console.log(response.data);
+                    }
+                }).catch(function (error) {
+                    app.dialogFormVisible = false;
+                    app.$message.error("未知异常")
+                })
+            }
+        },
+        mounted: function () {
+            // 检查是否登录
+            if(document.cookie.includes("ticket")){
+                this.isLogin = true;
+            }
+            // 获取问题列表
+            axios.get("/api/v1/questions?offset=0&limit=10&has_content=0")
+                .then(function (response) {
+                    if(response.data.code === 200){
+                        app.questions = response.data.data;
+                    }
+                })
+        }
+    })
+</script>
+</html>
