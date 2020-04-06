@@ -7,19 +7,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import xyz.zhouzekai.zaq.dao.CommentDAO;
-import xyz.zhouzekai.zaq.dao.UserDAO;
 import xyz.zhouzekai.zaq.exception.CODE;
 import xyz.zhouzekai.zaq.exception.RestException;
 import xyz.zhouzekai.zaq.model.Comment;
 import xyz.zhouzekai.zaq.model.EntityType;
-import xyz.zhouzekai.zaq.model.HostHolder;
 import xyz.zhouzekai.zaq.model.Question;
 import xyz.zhouzekai.zaq.service.CommentService;
+import xyz.zhouzekai.zaq.service.LikeService;
 import xyz.zhouzekai.zaq.service.QuestionService;
 import xyz.zhouzekai.zaq.service.UserService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +36,7 @@ public class QuestionController {
     CommentService commentService;
 
     @Autowired
-    HostHolder hostHolder;
+    LikeService likeService;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -77,6 +74,8 @@ public class QuestionController {
             for(Comment comment : comments){
                 ObjectNode node = objectMapper.valueToTree(comment);
                 node.put("username", userService.getUser(comment.getUserId()).getName());
+                node.put("likeCount", likeService.getLikeCount(comment.getId()));
+                node.put("likeStatus", likeService.getLikeStatus(comment.getId()));
                 commentsNode.add(node);
             }
             data.set("comments", commentsNode);

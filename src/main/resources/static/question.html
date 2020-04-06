@@ -44,12 +44,12 @@
             </el-card>
             <el-card v-for="comment in comments" v-bind:key="comment.id" style="margin-bottom: 20px;">
                 <h3>{{ comment.username }}</h3>
-                <p style="color: #8590a6">28 人赞同</p>
+                <p style="color: #8590a6">{{ comment.likeCount }} 人赞同</p>
                 <p>{{ comment.content }}</p>
                 <p style="color: #8590a6">发表于 {{ comment.createdDate }}</p>
                 <el-divider></el-divider>
-                <el-button type="primary" icon="el-icon-arrow-up">赞同 28</el-button>
-                <el-button type="primary" icon="el-icon-arrow-down" style="margin-left: 0; margin-right: 20px;"></el-button>
+                <el-button @click="like(comment)" icon="el-icon-arrow-up">赞同 {{ comment.likeCount }}</el-button>
+<!--                <el-button type="primary" icon="el-icon-arrow-down" style="margin-left: 0; margin-right: 20px;"></el-button>-->
                 <el-link icon="el-icon-s-comment" style="font-size: 16px;">7 条评论</el-link>
             </el-card>
             <el-card>
@@ -99,6 +99,25 @@
                 }).catch(function (error) {
                     app.$message.error("未知异常" + error)
                 })
+            },
+            like: function (comment) {
+                if(comment.likeStatus){
+                    axios.delete('/api/v1/comments/' + comment.id + '/like')
+                        .then(function (response) {
+                            if(response.data.code === 200){
+                                comment.likeCount = response.data.data;
+                                comment.likeStatus = false;
+                            }
+                        })
+                }else{
+                    axios.put('/api/v1/comments/' + comment.id + '/like')
+                        .then(function (response) {
+                            if(response.data.code === 200){
+                                comment.likeCount = response.data.data;
+                                comment.likeStatus = true;
+                            }
+                        })
+                }
             }
         },
         mounted: function () {
@@ -114,7 +133,6 @@
                     app.question.createdDate = data.question.createdDate;
                     app.question.publisher = data.question.publisher;
                     app.comments = data.comments;
-                    console.log(response.data)
                 }else if(response.data.code === 404){
                     // 问题记录不存在, 404
                     window.location.href="/404"

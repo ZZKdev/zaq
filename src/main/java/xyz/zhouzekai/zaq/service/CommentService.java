@@ -37,4 +37,8 @@ public class CommentService {
         comment.setContent(HtmlUtils.htmlEscape(content));
         return commentDAO.addComment(comment) > 0 ? comment.getId() : 0;
     }
+
+    public Comment getCommentById(int id){
+        return commentDAO.selectById(id);
+    }
 }

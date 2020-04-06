@@ -1,18 +1,14 @@
 package xyz.zhouzekai.zaq.controller;
 
-import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import xyz.zhouzekai.zaq.exception.CODE;
 import xyz.zhouzekai.zaq.exception.RestException;
-import xyz.zhouzekai.zaq.model.Comment;
 import xyz.zhouzekai.zaq.service.CommentService;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -40,5 +36,4 @@ public class CommentController {
         }
         return map;
     }
-
 }
