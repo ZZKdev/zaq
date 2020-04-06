@@ -1,20 +1,30 @@
 package xyz.zhouzekai.zaq.dao;
 
-import org.apache.ibatis.annotations.*;
+import io.lettuce.core.api.sync.RedisCommands;
 import org.springframework.stereotype.Repository;
-import xyz.zhouzekai.zaq.model.LoginTicket;
+import xyz.zhouzekai.zaq.util.RedisAdapter;
 
-@Mapper
 @Repository
-public interface LoginTicketDAO {
-    @Insert({"insert into login_ticket(user_id, expired, status, ticket) ",
-            "values(#{userId}, #{expired}, #{status}, #{ticket})"})
-    int addTicket(LoginTicket ticket);
+public class LoginTicketDAO {
+    // Redis session key 前缀
+    private final String SESSION_PREFIX = "zaq:session";
+    // 分隔符
+    private final String SPLIT = ":";
 
-    @Select({"select user_id, expired, status, ticket from login_ticket",
-            "where ticket=#{ticket}"})
-    LoginTicket selectByTicket(String ticket);
+    public void addTicket(String ticket, int userId, int expires){
+        RedisCommands<String, String> command = RedisAdapter.getCommand();
+        command.setex(SESSION_PREFIX + SPLIT +  ticket, expires, String.valueOf(userId));
+    }
 
-    @Update({"update login_ticket set status=#{status} where ticket=#{ticket}"})
-    void updateStatus(@Param("ticket") String ticket, @Param("status") int status);
+    public int selectByTicket(String ticket){
+        RedisCommands<String, String> command = RedisAdapter.getCommand();
+        String userId = command.get(SESSION_PREFIX + SPLIT  + ticket);
+        if(userId == null) return -1;
+        return Integer.valueOf(userId);
+    }
+
+    public void deleteByTicket(String ticket){
+        RedisCommands<String, String> command = RedisAdapter.getCommand();
+        command.del(SESSION_PREFIX + SPLIT + ticket);
+    }
 }

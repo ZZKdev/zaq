@@ -7,11 +7,9 @@ import xyz.zhouzekai.zaq.dao.LoginTicketDAO;
 import xyz.zhouzekai.zaq.dao.UserDAO;
 import xyz.zhouzekai.zaq.exception.CODE;
 import xyz.zhouzekai.zaq.exception.RestException;
-import xyz.zhouzekai.zaq.model.LoginTicket;
 import xyz.zhouzekai.zaq.model.User;
 import xyz.zhouzekai.zaq.util.MD5Util;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -39,7 +37,7 @@ public class UserService {
         user.setSalt(UUID.randomUUID().toString().substring(0, 5));
         user.setPassword(MD5Util.MD5(password + user.getSalt()));
         userDAO.addUser(user);
-        String ticket = addLoginTicket(user.getId());
+        String ticket = getLoginTicket(user.getId());
         return ticket;
     }
 
@@ -59,21 +57,16 @@ public class UserService {
         if(!MD5Util.MD5(password + user.getSalt()).equals(user.getPassword())){
             throw new RestException(CODE.Unauthorized, "用户名或者密码错误");
         }
-        String ticket = addLoginTicket(user.getId());
+        String ticket = getLoginTicket(user.getId());
         return ticket;
     }
 
 
-    private String addLoginTicket(int userId){
-        LoginTicket ticket = new LoginTicket();
-        ticket.setUserId(userId);
-        Date date = new Date();
-        date.setTime(date.getTime() + 1000*3600*24);
-        ticket.setExpired(date);
-        ticket.setStatus(0);
-        ticket.setTicket(UUID.randomUUID().toString().replaceAll("-", ""));
-        loginTicketDAO.addTicket(ticket);
-        return ticket.getTicket();
+    private String getLoginTicket(int userId){
+        String ticket = UUID.randomUUID().toString().replaceAll("-", "");
+        // ticket 有效期为 1 天
+        loginTicketDAO.addTicket(ticket, 3600 * 24, userId);
+        return ticket;
     }
 
     public User getUser(int id) {

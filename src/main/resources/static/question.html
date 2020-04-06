@@ -92,6 +92,8 @@
                         app.$message.success('评论添加成功')
                         location.reload();
                     }else if(response.data.code === 401){
+                        // 未登录或者 ticket 失效，删除 ticket 回去重新登录
+                        document.cookie="ticket=;Max-Age=0";
                         window.location.href="/login";
                     }
                 }).catch(function (error) {

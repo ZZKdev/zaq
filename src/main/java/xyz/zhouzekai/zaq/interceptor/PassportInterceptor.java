@@ -7,13 +7,11 @@ import org.springframework.web.servlet.ModelAndView;
 import xyz.zhouzekai.zaq.dao.LoginTicketDAO;
 import xyz.zhouzekai.zaq.dao.UserDAO;
 import xyz.zhouzekai.zaq.model.HostHolder;
-import xyz.zhouzekai.zaq.model.LoginTicket;
 import xyz.zhouzekai.zaq.model.User;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
 
 @Component
 public class PassportInterceptor implements HandlerInterceptor {
@@ -38,11 +36,10 @@ public class PassportInterceptor implements HandlerInterceptor {
             }
         }
         if(ticket != null){
-            LoginTicket loginTicket = loginTicketDAO.selectByTicket(ticket);
-            if(loginTicket == null || loginTicket.getExpired().before(new Date()) || loginTicket.getStatus() == 1){
-                return true;
-            }
-            User user =  userDAO.selectById(loginTicket.getUserId());
+            int userId = loginTicketDAO.selectByTicket(ticket);
+            // login_ticket 失效
+            if(userId == -1) return true;
+            User user =  userDAO.selectById(userId);
             hostHolder.setUser(user);
         }
         return true;
@@ -50,7 +47,6 @@ public class PassportInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-
     }
 
     @Override
