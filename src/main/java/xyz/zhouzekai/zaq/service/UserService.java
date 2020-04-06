@@ -65,7 +65,7 @@ public class UserService {
     private String getLoginTicket(int userId){
         String ticket = UUID.randomUUID().toString().replaceAll("-", "");
         // ticket 有效期为 1 天
-        loginTicketDAO.addTicket(ticket, 3600 * 24, userId);
+        loginTicketDAO.addTicket(ticket, userId, 3600 * 24);
         return ticket;
     }
 
