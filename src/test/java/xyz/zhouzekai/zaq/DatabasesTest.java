@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 @SpringBootTest
-//@Sql("classpath:init-schema.sql")
+@Sql("classpath:init-schema.sql")
 public class DatabasesTest {
 //    @Autowired
 //    UserService userService;

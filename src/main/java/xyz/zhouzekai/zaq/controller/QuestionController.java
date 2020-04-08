@@ -75,7 +75,8 @@ public class QuestionController {
                 ObjectNode node = objectMapper.valueToTree(comment);
                 node.put("username", userService.getUser(comment.getUserId()).getName());
                 node.put("likeCount", likeService.getLikeCount(comment.getId()));
-                node.put("likeStatus", likeService.getLikeStatus(comment.getId()));
+                node.put("isLiked", likeService.getLikeStatus(comment.getId()));
+                node.put("commentCount", commentService.getCommentCount(comment.getId(), EntityType.COMMENT));
                 commentsNode.add(node);
             }
             data.set("comments", commentsNode);
@@ -102,6 +103,7 @@ public class QuestionController {
                 ObjectNode node = objectMapper.valueToTree(question);
                 // 获取用户名
                 node.put("username", userService.getUser(question.getUserId()).getName());
+                node.put("commentCount", commentService.getCommentCount(question.getId(), EntityType.QUESTION));
                 questionsNode.add(node);
             }
             root.put("code", 200);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>问题详情</title>
@@ -48,22 +48,62 @@
                 <p>{{ comment.content }}</p>
                 <p style="color: #8590a6">发表于 {{ comment.createdDate }}</p>
                 <el-divider></el-divider>
-                <el-button @click="like(comment)" icon="el-icon-arrow-up">赞同 {{ comment.likeCount }}</el-button>
-<!--                <el-button type="primary" icon="el-icon-arrow-down" style="margin-left: 0; margin-right: 20px;"></el-button>-->
-                <el-link icon="el-icon-s-comment" style="font-size: 16px;">7 条评论</el-link>
+                <button @click="like(comment)" v-bind:class="{ button_liked: comment.isLiked, button_disliked: !comment.isLiked}"><i class="el-icon-arrow-up"></i> 赞同 {{ comment.likeCount }}</button>
+                <el-link icon="el-icon-s-comment" style="font-size: 16px;" @click="showComment(comment)">{{ comment.commentCount }} 条评论</el-link>
             </el-card>
             <el-card>
                 <el-form>
                     <el-form-item>
                         <el-input type="textarea" :rows="8" v-model="comment" style="margin-bottom: 16px;"></el-input>
-                        <el-button type="primary" style="float: right" @click="addComment">发表</el-button>
+                        <el-button type="primary" style="float: right" @click="addComment(question.id, 1, comment)">发表</el-button>
                     </el-form-item>
                 </el-form>
             </el-card>
         </el-col>
     </el-row>
+    <el-dialog :title="dialogComment.commentCount + ' 条评论'" :visible.sync="dialogComment.isVisible">
+        <div v-for="comment in dialogComment.comments">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 15px; color: #1A1A1A; font-weight: 500">{{comment.username}}</span>
+                <span style="font-size: 14px; color: #8590a6">{{comment.createdDate}}</span>
+            </div>
+            <p style="line-height: 1.6; font-size: 15px;">{{comment.content}}</p>
+            <button @click="like(comment)"  v-bind:class="{ button_liked: comment.isLiked, button_disliked: !comment.isLiked}"><i class="el-icon-arrow-up"></i>{{ comment.likeCount }}</button>
+            <el-divider></el-divider>
+        </div>
+        <div slot="footer" >
+            <el-input placeholder="写下你的评论..." v-model="dialogComment.comment">
+                <el-button slot="append" type="primary" @click="addComment(dialogComment.currComment.id, 2, dialogComment.comment)">发布</el-button>
+            </el-input>
+        </div>
+    </el-dialog>
 </div>
 </body>
+<style>
+    .button_liked{
+        background: #409EFF;
+        color: #FFFFFF;
+    }
+    .button_disliked{
+        background: #FFFFFF;
+        color: #606266;
+    }
+    button {
+        border: 1px solid #DCDFE6;
+        font-size: 14px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        outline: 0;
+        transition: .2s;
+        margin-right: 20px;
+    }
+
+    button:hover{
+        background: #409EFF;
+        color: #FFFFFF;
+    }
+</style>
 <script>
     let app = new Vue({
         el: '#app',
@@ -80,13 +120,20 @@
             },
             comment: '',
             comments: [],
+            dialogComment: {
+                isVisible: false,
+                comments: [],
+                commentCount: 0,
+                currComment: null,
+                comment: ''
+            }
         },
         methods: {
-            addComment: function () {
+            addComment: function (entityId, entityType, content) {
                 axios.post('/api/v1/comments', Qs.stringify({
-                    content: this.comment,
-                    entityId: this.question.id,
-                    entityType: 1 // 1 为问题
+                    content: content,
+                    entityId: entityId,
+                    entityType: entityType// 1 为问题
                 })).then(function (response) {
                     if(response.data.code === 200){
                         app.$message.success('评论添加成功')
@@ -101,12 +148,12 @@
                 })
             },
             like: function (comment) {
-                if(comment.likeStatus){
+                if(comment.isLiked){
                     axios.delete('/api/v1/comments/' + comment.id + '/like')
                         .then(function (response) {
                             if(response.data.code === 200){
                                 comment.likeCount = response.data.data;
-                                comment.likeStatus = false;
+                                comment.isLiked = false;
                             }
                         })
                 }else{
@@ -114,10 +161,22 @@
                         .then(function (response) {
                             if(response.data.code === 200){
                                 comment.likeCount = response.data.data;
-                                comment.likeStatus = true;
+                                comment.isLiked = true;
                             }
                         })
                 }
+            },
+            showComment: function (comment) {
+                axios.get('/api/v1/comments/' + comment.id + '?entityType=2')
+                    .then(function (response) {
+                        if(response.data.code === 200){
+                            let data = response.data.data;
+                            app.dialogComment.comments = data.comments;
+                            app.dialogComment.commentCount = data.commentCount;
+                            app.dialogComment.isVisible = true;
+                            app.dialogComment.currComment = comment;
+                        }
+                    })
             }
         },
         mounted: function () {

@@ -11,7 +11,6 @@ public class Question {
     private Date createdDate;
     @JsonIgnore
     private int userId;
-    private int commentCount;
 
     public int getId() {
         return id;
@@ -53,11 +52,4 @@ public class Question {
         this.userId = userId;
     }
 
-    public int getCommentCount() {
-        return commentCount;
-    }
-
-    public void setCommentCount(int commentCount) {
-        this.commentCount = commentCount;
-    }
 }

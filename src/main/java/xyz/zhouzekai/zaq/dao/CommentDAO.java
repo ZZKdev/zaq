@@ -22,7 +22,7 @@ public interface CommentDAO {
             " where entity_id=#{entityId} and entity_type=#{entityType} order by created_date desc"})
     List<Comment> selectCommentByEntity(@Param("entityId") int entityId, @Param("entityType") int entityType);
 
-    @Select({"select ", SELECT_FIELDS, " from ", TABLE_NAME,
-            " where id=#{id}"})
-    Comment selectById(@Param("id") int id);
+    @Select({"select count(*) from " + TABLE_NAME,
+            " where entity_id=#{entityId} and entity_type=#{entityType}"})
+    int selectCommentCountByEntity(@Param("entityId") int entityId, @Param("entityType") int entityType);
 }
